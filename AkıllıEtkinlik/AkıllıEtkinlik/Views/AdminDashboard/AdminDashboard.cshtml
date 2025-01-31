@@ -1,0 +1,84 @@
+﻿@{
+    Layout = "_Layout2";
+}
+
+<div class="container">
+    <h1 class="mt-5">Admin Paneli</h1>
+    <p>Bu panelden sistem yönetimi yapabilirsiniz. Aşağıdaki işlevlerden birini seçin:</p>
+
+    <div class="row mt-4">
+        <!-- Kullanıcı Yönetimi -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-people fs-1"></i>
+                    <h5 class="card-title mt-3">Kullanıcı Yönetimi</h5>
+                    <p class="card-text">Sistemdeki tüm kullanıcıları yönetin.</p>
+                    <a href="/AdminDashboard/KullanıcıYönetimi" class="btn" style="background-color: #D58EE3; color: white;">Git</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Etkinlik Onaylama -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check fs-1"></i>
+                    <h5 class="card-title mt-3">Etkinlik Onaylama</h5>
+                    <p class="card-text">Etkinlik başvurularını kontrol edin.</p>
+                    <a href="/AdminDashboard/EtkinlikOnay" class="btn" style="background-color: #D58EE3; color: white;">Git</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raporlama -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-graph-up fs-1"></i>
+                    <h5 class="card-title mt-3">Raporlama</h5>
+                    <p class="card-text">Sistem raporlarını inceleyin.</p>
+                    <a href="/AdminDashboard/Rapor" class="btn" style="background-color: #D58EE3; color: white;">Git</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Sistem Ayarları -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-plus fs-1"></i>
+                    <h5 class="card-title mt-3">Etkinlik Ekleme</h5>
+                    <p class="card-text">Etkinlik ekleme ve düzenleme işlemlerini inceleyin.</p>
+                    <a href="/AdminDashboard/EtkinlikEkleme" class="btn" style="background-color: #D58EE3; color: white;">Git</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat fs-1"></i>
+                    <h5 class="card-title mt-3">Mesajlar</h5>
+                    <p class="card-text">Etkinliklerin mesajlarını kontrol ediniz..</p>
+                    <a href="/AdminDashboard/Mesaj" class="btn" style="background-color: #D58EE3; color: white;">Git</a>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Geri Bildirim Yönetimi -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat-left-dots fs-1"></i>
+                    <h5 class="card-title mt-3">Geri Bildirim Yönetimi</h5>
+                    <p class="card-text">Kullanıcı geri bildirimlerini inceleyin.</p>
+                    <a href="/AdminDashboard/Geribildirim" class="btn" style="background-color: #D58EE3; color: white;">Git</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

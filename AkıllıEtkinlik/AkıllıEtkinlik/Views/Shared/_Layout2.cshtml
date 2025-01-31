@@ -1,0 +1,122 @@
+﻿@{
+    Layout = null; // Özel bir layout
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Paneli</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-image: url('/resimler/admin-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+            color: #000;
+        }
+
+        .navbar-section {
+            background-color: #343a40;
+            color: white;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 4px solid #D58EE3;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .navbar-nav .nav-link {
+            color: #fff;
+        }
+
+            .navbar-nav .nav-link:hover {
+                color: #D58EE3;
+            }
+
+        .content {
+            margin: 20px auto;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 1200px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar Bölümü -->
+    <div class="navbar-section">
+        <nav class="navbar navbar-expand-lg navbar-dark container">
+            <a class="navbar-brand" href="/AdminDashboard/AdminDashboard">Admin Paneli</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="adminNavbar">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Kullanıcı Yönetimi -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/AdminDashboard/KullanıcıYönetimi">
+                            <i class="bi bi-people"></i> Kullanıcı Yönetimi
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/AdminDashboard/EtkinlikOnay">
+                            <i class="bi bi-calendar-check"></i> Etkinlik Onaylama
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/AdminDashboard/Rapor">
+                            <i class="bi bi-graph-up"></i> Raporlama
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/AdminDashboard/EtkinlikEkleme">
+                            <i class="bi bi-calendar-plus"></i> Etkinlik Ekleme
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/AdminDashboard/Mesaj">
+                            <i class="bi bi-chat"></i> Mesajlar
+                        </a>
+                    </li>
+                    <!-- Geri Bildirim Yönetimi -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/AdminDashboard/Geribildirim">
+                            <i class="bi bi-chat-left-dots"></i> Geri Bildirim Yönetimi
+                        </a>
+                    </li>
+                    <!-- Çıkış -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Home/Login">
+                            <i class="bi bi-box-arrow-right"></i> Çıkış Yap
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <!-- İçerik Alanı -->
+    <div class="content">
+        @RenderBody()
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

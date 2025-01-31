@@ -1,0 +1,505 @@
+﻿@{
+    Layout = "_Layout1";
+}
+
+
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilim</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Profile and Events Layout */
+        .profile-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .profile-section {
+            flex: 1;
+            max-width: 350px;
+        }
+
+        .events-section {
+            flex: 2;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        /* Greeting Message Styling */
+        #greetingMessage {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #6a1b9a;
+            max-width: 350px;
+            text-align: left;
+            margin-top: 20px;
+            line-height: 1.3;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+            #greetingMessage p {
+                background: linear-gradient(45deg, #6a1b9a, #d81b60);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+        /* Confetti Icon Styling */
+        #confettiIcon {
+            font-size: 5rem;
+            color: #d81b60;
+            margin-top: 10px;
+            margin-left: 70px;
+        }
+
+        /* Update Form */
+        #updateForm {
+            width: 100%;
+            max-width: 350px;
+            display: none;
+        }
+
+        /* Points Display Styling */
+        .user-points {
+            font-size: 1.2rem;
+            color: #6a1b9a;
+            margin-top: 5px;
+            font-weight: bold;
+            margin-bottom: 10px; /* Add space below points */
+        }
+
+        /* Events Section and Event Card Styling */
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #6a1b9a;
+            margin-bottom: 20px;
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .event-card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+            .event-card:hover {
+                transform: scale(1.05);
+            }
+
+        .event-image {
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .event-details {
+            padding: 15px;
+        }
+
+        .event-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .event-location, .event-date {
+            display: flex;
+            align-items: center;
+            color: #555;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+
+        /* Match tone for "Konum", "Saat", and "Süre" */
+        .event-location, .event-date, .event-duration {
+            display: flex;
+            align-items: center;
+            color: #555; /* Adjust tone to match */
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+
+        /* Purple color for the category text */
+        .event-category {
+            color: #6a1b9a;
+            font-weight: bold;
+        }
+
+        .event-card {
+            position: relative;
+            padding-bottom: 50px; /* Make space for the button */
+        }
+
+        .event-footer {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+
+
+        .detay-btn {
+            position: absolute;
+            bottom: 10px; /* Alttan boşluk */
+            right: 10px; /* Sağdan boşluk */
+            padding: 5px 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #6a1b9a;
+            border: 2px solid #d6a3ff;
+            border-radius: 30px;
+            background-color: white;
+            display: inline-flex;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s, color 0.3s; /* Geçiş efekti */
+        }
+
+            .detay-btn:hover {
+                background-color: #6a1b9a; /* Mor arka plan */
+                color: white; /* Beyaz yazı */
+                border-color: #6a1b9a; /* Mor sınır */
+            }
+
+            .detay-btn span {
+                font-size: 14px;
+                color: #d6a3ff;
+            }
+
+            .detay-btn:hover span {
+                color: white; /* Hover durumunda içteki span da beyaz olur */
+            }
+
+
+
+        .icon {
+            margin-right: 5px;
+            color: #6a1b9a;
+        }
+    </style>
+</head>
+
+<body>
+
+    @{
+        var user = (Kullanıcı)ViewData["User"];
+
+
+
+        var puan = (int)ViewData["Puan"];
+    }
+
+    <div class="container mt-5 profile-container">
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <div class="text-center">
+                <img src="@Url.Content(user?.ProfilFotografi ?? "/images/default-profile.png")"
+                     alt="Profil Fotoğrafı" class="img-thumbnail profile-photo">
+                <div class="mt-2">
+                    <h5>@user?.Ad @user?.Soyad</h5>
+                    <p class="username">~@user?.KullanıcıAdı</p>
+                </div>
+                <!-- Points Section -->
+                <div class="user-points">
+                    <span>🎖️ Puanın: <strong>@puan</strong></span>
+                </div>
+                <button id="updateButton" class="btn" style="
+                 padding: 10px 20px;
+                 font-weight: bold;
+                 color: #333;
+                 border: 2px solid #d6a3ff;
+                 border-radius: 30px;
+                 background-color: white;
+                 display: inline-flex;
+                 align-items: center;
+                 gap: 5px;
+                 margin-top: 15px;">
+                    Bilgilerimi Güncelle
+                    <span style="font-size: 18px; color: #d6a3ff;">+</span>
+                </button>
+            </div>
+
+            <div id="greetingMessage" class="mt-3">
+                <p>Hoş Geldin @user?.KullanıcıAdı! Hadi bu havada iyi gidecek etkinliklere göz atalım!</p>
+            </div>
+            <div id="confettiIcon">🎉</div>
+
+            <!-- Update Form - initially hidden -->
+            <div id="updateForm" class="card p-4 mt-3" style="display:none;">
+                <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control" id="userName" name="KullanıcıAdı" placeholder="Kullanıcı Adı" value="@user?.KullanıcıAdı" required>
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control" id="firstName" name="Ad" placeholder="Ad" value="@user?.Ad" required>
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control" id="lastName" name="Soyad" placeholder="Soyad" value="@user?.Soyad" required>
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" name="Eposta" placeholder="E-posta" value="@user?.Eposta" required>
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input type="password" class="form-control" id="newPassword" name="Sifre" placeholder="Şifre">
+                        <span class="input-group-text">
+                            <i class="bi bi-eye-slash" id="togglePassword" style="cursor: pointer;"></i>
+                        </span>
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input type="password" class="form-control" id="confirmPassword" name="SifreTekrar" placeholder="Şifreyi Tekrar Giriniz">
+                        <span class="input-group-text">
+                            <i class="bi bi-eye-slash" id="toggleConfirmPassword" style="cursor: pointer;"></i>
+                        </span>
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                        <input type="text" class="form-control" id="phoneNumber" name="TelefonNumarasi" placeholder="Telefon Numarası" value="@user?.TelefonNumarasi">
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-heart"></i></span>
+                        <input type="text" class="form-control" id="interests" name="IlgiAlanlari" placeholder="İlgi Alanları" value="@user?.IlgiAlanlari">
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                        <input type="text" class="form-control" id="location" name="Konum" placeholder="Konum" value="@user?.Konum">
+                    </div>
+                    <div id="smallMap" style="height: 200px; width: 100%;"></div>
+
+                    <!-- Gizli Enlem ve Boylam Alanları -->
+                    <input type="hidden" id="latitude" name="Latitude" value="@ViewData["Latitude"]">
+                    <input type="hidden" id="longitude" name="Longitude" value="@ViewData["Longitude"]">
+                    <br />
+                    <br />
+
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text"><i class="bi bi-image"></i></span>
+                        <input type="file" class="form-control" id="profilePhoto" name="ProfilFotografi" placeholder="Profil Fotoğrafı" accept="image/*">
+                    </div>
+
+
+                    <br />
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-dark">Güncelle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
+
+
+        <!-- Events Section on the Right Side -->
+        <div class="events-section">
+
+
+
+            <div class="section-title mt-4">Katıldığım Etkinlikler</div>
+            <div class="events-grid">
+                <!-- Dinamik olarak katıldığım etkinlikler -->
+                @foreach (var etkinlik in ViewData["KatıldığımEtkinlikler"] as List<AkıllıEtkinlik.Models.Etkinlik>)
+                {
+                    <div class="event-card">
+                        <div class="event-image">
+                            <img src="@etkinlik.ImagePath" alt="@etkinlik.EtkinlikAdı" style="width: 100%; height: 150px; object-fit: cover;">
+                        </div>
+
+                        <div class="event-details">
+                            <div class="event-title">@etkinlik.EtkinlikAdı</div>
+                            <div class="event-category">
+                                <i class="bi bi-tags icon"></i> Kategori: @etkinlik.Kategori
+                            </div>
+                            <div class="event-description">
+                                <p>@(etkinlik.Açıklama.Length > 100 ? etkinlik.Açıklama.Substring(0, 100) + "..." : etkinlik.Açıklama)</p>
+                            </div>
+                            <div class="event-location">
+                                <i class="bi bi-geo-alt icon"></i> @etkinlik.Konum
+                            </div>
+                            <div class="event-date">
+                                <i class="bi bi-calendar icon"></i> @etkinlik.Tarih.ToString("dd MMM yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")
+                            </div>
+                            <div class="event-duration">
+                                <i class="bi bi-clock icon"></i> Süre: @etkinlik.Süre dakika
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-white">
+                            <a asp-action="EtkinlikKatılım" asp-controller="UserDashboard" asp-route-id="@etkinlik.EtkinlikID" class="detay-btn">
+                                Detayları Gör
+                            </a>
+                        </div>
+
+                    </div>
+                }
+            </div>
+
+
+            <br />
+            <br />
+            <br />
+            <br />
+
+            <div class="section-title">Oluşturduğum Etkinlikler</div>
+            <div class="events-grid">
+                <!-- Dinamik olarak oluşturduğum etkinlikler -->
+                @foreach (var etkinlik in ViewData["OluşturduğumEtkinlikler"] as List<AkıllıEtkinlik.Models.Etkinlik>)
+                {
+                    <div class="event-card">
+                        <div class="event-image">
+                            <img src="@etkinlik.ImagePath" alt="@etkinlik.EtkinlikAdı" style="width: 100%; height: 150px; object-fit: cover;">
+                        </div>
+
+                        <div class="event-details">
+                            <div class="event-title">@etkinlik.EtkinlikAdı</div>
+                            <div class="event-category">
+                                <i class="bi bi-tags icon"></i> Kategori: @etkinlik.Kategori
+                            </div>
+                            <div class="event-description">
+                                <p>@(etkinlik.Açıklama.Length > 100 ? etkinlik.Açıklama.Substring(0, 100) + "..." : etkinlik.Açıklama)</p>
+                            </div>
+                            <div class="event-location">
+                                <i class="bi bi-geo-alt icon"></i> @etkinlik.Konum
+                            </div>
+                            <div class="event-date">
+                                <i class="bi bi-calendar icon"></i> @etkinlik.Tarih.ToString("dd MMM yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")
+                            </div>
+                            <div class="event-duration">
+                                <i class="bi bi-clock icon"></i> Süre: @etkinlik.Süre dakika
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-white">
+                            <a asp-action="EtkinlikKatılım" asp-controller="UserDashboard" asp-route-id="@etkinlik.EtkinlikID" class="detay-btn">
+                                Detayları Gör
+                            </a>
+                        </div>
+
+
+                    </div>
+                }
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=&callback=initMaps" async defer></script>
+
+    <script>
+        document.getElementById('updateButton').addEventListener('click', function () {
+            var updateForm = document.getElementById('updateForm');
+            var greetingMessage = document.getElementById('greetingMessage');
+            var confettiIcon = document.getElementById('confettiIcon');
+            if (updateForm.style.display === 'none') {
+                updateForm.style.display = 'block';
+                greetingMessage.style.display = 'none';
+                confettiIcon.style.display = 'none';
+            } else {
+                updateForm.style.display = 'none';
+                greetingMessage.style.display = 'block';
+                confettiIcon.style.display = 'block';
+            }
+        });
+
+        // Toggle password visibility for the password and confirm password fields
+        const togglePassword = document.getElementById('togglePassword');
+        const newPassword = document.getElementById('newPassword');
+        togglePassword.addEventListener('click', function () {
+            const type = newPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+            newPassword.setAttribute('type', type);
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+
+        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        toggleConfirmPassword.addEventListener('click', function () {
+            const type = confirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+            confirmPassword.setAttribute('type', type);
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+    </script>
+
+
+    <script>
+
+        function initMaps() {
+            // Küçük Harita (Güncelleme Haritası)
+            const initialLat = parseFloat("@(ViewData["Latitude"]?.ToString().Replace(',', '.') ?? "41.0082")");
+            const initialLng = parseFloat("@(ViewData["Longitude"]?.ToString().Replace(',', '.') ?? "28.9784")");
+
+
+            if (!isNaN(initialLat) && !isNaN(initialLng)) {
+                const smallMapCenter = { lat: initialLat, lng: initialLng };
+
+                const smallMap = new google.maps.Map(document.getElementById("smallMap"), {
+                    zoom: 15,
+                    center: smallMapCenter,
+                });
+
+                const marker = new google.maps.Marker({
+                    position: smallMapCenter,
+                    map: smallMap,
+                    draggable: true,
+                });
+
+                marker.addListener('dragend', function (event) {
+                    updateLatLngFields(event.latLng.lat(), event.latLng.lng());
+                });
+
+                smallMap.addListener('click', function (event) {
+                    marker.setPosition(event.latLng);
+                    updateLatLngFields(event.latLng.lat(), event.latLng.lng());
+                });
+            }
+
+            function updateLatLngFields(lat, lng) {
+                document.getElementById("latitude").value = lat.toFixed(6);
+                document.getElementById("longitude").value = lng.toFixed(6);
+            }
+        }
+
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+﻿@model AkıllıEtkinlik.Models.Etkinlik
+@{
+    Layout = "_Layout2";
+
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+
+
+
+
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+
+        @if (!string.IsNullOrEmpty(Model.ImagePath))
+        {
+            <img src="@Model.ImagePath" class="card-img-top mb-3" alt="@Model.EtkinlikAdı" style="max-width: 50%; height: auto; max-height: 500px; object-fit: cover; border-radius: 15px;">
+        }
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h3 class="card-title text-primary font-weight-bold">@Model.EtkinlikAdı</h3>
+                <p class="text-muted">@Model.Açıklama</p>
+            </div>
+        
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Tarih:</strong> @Model.Tarih.ToString("dd.MM.yyyy")</p>
+                <p><strong>Saat:</strong> @Model.Saat.ToString(@"hh\:mm")</p>
+                <p><strong>Konum:</strong> @Model.Konum</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Süre:</strong> @Model.Süre dakika</p>
+                <p><strong>Kategori:</strong> @Model.Kategori</p>
+            </div>
+        </div>
+        <hr>
+        <!-- Harita Konumunu Gösterme -->
+        <div id="map" style="height: 400px; width: 100%;"></div>
+
+
+        <!-- Güncelleme Formu -->
+
+        <form asp-action="EtkinlikGuncelle" asp-controller="UserDashboard" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="EtkinlikID" value="@Model.EtkinlikID" />
+            <div class="mb-3">
+                <label for="EtkinlikAdı" class="form-label">Etkinlik Adı</label>
+                <input type="text" class="form-control" id="EtkinlikAdı" name="EtkinlikAdı" value="@Model.EtkinlikAdı" required />
+            </div>
+            <div class="mb-3">
+                <label for="Açıklama" class="form-label">Açıklama</label>
+                <textarea class="form-control" id="Açıklama" name="Açıklama" rows="3">@Model.Açıklama</textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Tarih" class="form-label">Tarih</label>
+                    <input type="date" class="form-control" id="Tarih" name="Tarih" value="@Model.Tarih.ToString("yyyy-MM-dd")" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Saat" class="form-label">Saat</label>
+                    <input type="time" class="form-control" id="Saat" name="Saat" value="@Model.Saat.ToString(@"hh\:mm")" required />
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="Konum" class="form-label">Konum</label>
+                <input type="text" class="form-control" id="Konum" name="Konum" value="@Model.Konum" required />
+            </div>
+
+            <div id="smallMap" style="height: 200px; width: 100%;"></div>
+
+            <!-- Gizli Enlem ve Boylam Alanları -->
+            <input type="hidden" id="latitude" name="Latitude" value="@Model.Latitude">
+            <input type="hidden" id="longitude" name="Longitude" value="@Model.Longitude">
+
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Süre" class="form-label">Süre (dakika)</label>
+                    <input type="number" class="form-control" id="Süre" name="Süre" value="@Model.Süre" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Kategori" class="form-label">Kategori</label>
+                    <input type="text" class="form-control" id="Kategori" name="Kategori" value="@Model.Kategori" />
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="EtkinlikResmi" class="form-label">Etkinlik Resmi</label>
+                <input type="file" class="form-control" id="EtkinlikResmi" name="EtkinlikResmi" accept="image/*" />
+            </div>
+
+
+            <button type="submit" class="btn btn-primary w-100">Güncelle</button>
+        </form>
+
+        <!-- Silme Butonu -->
+        <form asp-action="EtkinlikSilme" asp-controller="AdminDashboard" method="post" class="mt-3">
+            <input type="hidden" name="EtkinlikID" value="@Model.EtkinlikID" />
+            <button type="submit" class="btn btn-danger w-100">Sil</button>
+        </form>
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB79x9mGu0_Y1W2sDlFxAhQTRuD6mMLtyg&callback=initMaps" async defer></script>
+
+
+<script>
+    function initMaps() {
+        // Büyük Harita (Detay Haritası)
+        const lat = parseFloat("@Model.Latitude.ToString().Replace(',', '.')");
+        const lng = parseFloat("@Model.Longitude.ToString().Replace(',', '.')");
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+            const etkinlikKonumu = { lat: lat, lng: lng };
+
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 15,
+                center: etkinlikKonumu,
+            });
+
+            new google.maps.Marker({
+                position: etkinlikKonumu,
+                map: map,
+                title: "@Model.EtkinlikAdı"
+            });
+        }
+
+        // Küçük Harita (Güncelleme Haritası)
+        const initialLat = parseFloat("@Model.Latitude.ToString().Replace(',', '.')");
+        const initialLng = parseFloat("@Model.Longitude.ToString().Replace(',', '.')");
+
+        if (!isNaN(initialLat) && !isNaN(initialLng)) {
+            const smallMapCenter = { lat: initialLat, lng: initialLng };
+
+            const smallMap = new google.maps.Map(document.getElementById("smallMap"), {
+                zoom: 15,
+                center: smallMapCenter,
+            });
+
+            const marker = new google.maps.Marker({
+                position: smallMapCenter,
+                map: smallMap,
+                draggable: true,
+            });
+
+            marker.addListener('dragend', function (event) {
+                updateLatLngFields(event.latLng.lat(), event.latLng.lng());
+            });
+
+            smallMap.addListener('click', function (event) {
+                marker.setPosition(event.latLng);
+                updateLatLngFields(event.latLng.lat(), event.latLng.lng());
+            });
+        }
+
+        function updateLatLngFields(lat, lng) {
+            document.getElementById("latitude").value = lat.toFixed(6);
+            document.getElementById("longitude").value = lng.toFixed(6);
+        }
+    }
+</script>
+
+<style>
+    .card {
+        border-radius: 15px;
+    }
+
+    .card-title {
+        color: #5a5ac9;
+    }
+
+    .btn-outline-primary {
+        border-color: #5a5ac9;
+        color: #5a5ac9;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #5a5ac9;
+            color: #fff;
+        }
+
+
+
+
+    .etkinlige-katil-btn {
+        padding: 10px 20px;
+        font-size: 1.25rem; /* Buton boyutunu artırır */
+        font-weight: bold;
+    }
+</style>

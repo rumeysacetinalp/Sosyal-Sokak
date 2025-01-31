@@ -1,0 +1,108 @@
+﻿@{
+    Layout = "_Layout2";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Onay Bekleyen Etkinlikler</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (Model.Count == 0)
+    {
+        <p class="text-center">Onay bekleyen etkinlik bulunmamaktadır.</p>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var etkinlik in Model)
+            {
+                <div class="col-md-12 mb-4">
+                    <div class="event-container shadow rounded d-flex p-3">
+                        <img src="@etkinlik.ImagePath" alt="@etkinlik.EtkinlikAdı" class="event-image rounded">
+                        <div class="event-details ms-4">
+                            <h3 class="event-title">@etkinlik.EtkinlikAdı</h3>
+                            <p class="event-description">@etkinlik.Açıklama</p>
+                            <p>
+                                <span class="badge bg-secondary">@etkinlik.Kategori</span>
+                                <span class="ms-3"><i class="bi bi-calendar2"></i> @etkinlik.Tarih.ToShortDateString()</span>
+                                <span class="ms-3"><i class="bi bi-clock"></i> @etkinlik.Saat</span>
+                                <span class="ms-3"><i class="bi bi-geo-alt"></i> @etkinlik.Konum</span>
+                            </p>
+                            <p><strong>Organizatör:</strong> @etkinlik.Kullanıcı?.Ad @etkinlik.Kullanıcı?.Soyad</p>
+
+                           
+
+                            <form method="post" action="/AdminDashboard/EtkinlikOnayla" class="mt-3 d-inline-block">
+                                <input type="hidden" name="etkinlikID" value="@etkinlik.EtkinlikID" />
+                                <button type="submit" class="btn btn-success px-4">Onayla</button>
+                            </form>
+
+                            <form method="post" action="/AdminDashboard/EtkinlikSil" class="mt-3 d-inline-block">
+                                <input type="hidden" name="etkinlikID" value="@etkinlik.EtkinlikID" />
+                                <button type="submit" class="btn btn-danger px-4">Onay Kaldır</button>
+                            </form>
+
+
+
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    body {
+        background-color: #f7f9fc;
+    }
+
+    .event-container {
+        background: white;
+        display: flex;
+        align-items: flex-start;
+        transition: transform 0.3s ease;
+        border: 1px solid #ddd;
+    }
+
+        .event-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+    .event-image {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border: 2px solid #ddd;
+    }
+
+    .event-details {
+        flex: 1;
+    }
+
+    .event-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .event-description {
+        font-size: 1rem;
+        color: #555;
+        margin-bottom: 10px;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 5px 10px;
+    }
+</style>

@@ -1,0 +1,477 @@
+﻿@model IEnumerable<AkıllıEtkinlik.Models.Etkinlik>
+@{
+    Layout = "_Layout1";
+    int i = 0; // Sayaç tanımı
+
+    // Kullanıcının bulunduğu konuma göre seçili durumu belirleyin
+    var userCity = ViewBag.UserCity as string;
+    
+    var randomEvents = Model.OrderBy(x => Guid.NewGuid()).Take(7).ToList();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+
+<div class="container mt-5">
+    <div class="box">
+        @foreach (var etkinlik in randomEvents) // Rastgele seçilen etkinlikler
+        {
+            <span style="--i:@i">
+                <img src="@etkinlik.ImagePath" alt="@etkinlik.EtkinlikAdı"
+                     onclick="window.location.href='@Url.Action("EtkinlikKatılım", "UserDashboard", new { id = etkinlik.EtkinlikID })'" />
+            </span>
+            i++;
+        }
+    </div>
+</div>
+
+
+
+
+<div class="container mt-5">
+    <!-- Arama Çubuğu ve İl Filtresi Alanı -->
+    <div class="search-filter-container">
+        <!-- Arama Çubuğu -->
+        <input type="text" class="form-control search-bar" id="searchInput" placeholder="Etkinlik, sanatçı veya mekan arayın" aria-label="Arama Çubuğu" onkeyup="filterEvents()">
+        <!-- İl Filtresi -->
+        <div class="il-filter-container">
+            <select id="ilSelect" class="form-control il-filter" aria-label="Kayıtlı İl" onchange="filterEventsByCity()">
+                <option selected disabled>@ViewBag.UserCity</option>
+                @foreach (var city in ViewBag.Cities)
+                {
+                    <option value="@city">@city</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- Etkinlik Türleri Butonları -->
+    <div class="d-flex justify-content-center flex-wrap mb-4 event-types">
+        <button onclick="filterByCategory('Konser')" class="btn btn-outline-primary event-type-btn">
+            <i class="fas fa-microphone icon-color"></i> Konser
+        </button>
+        <button onclick="filterByCategory('Tiyatro')" class="btn btn-outline-primary event-type-btn">
+            <i class="fas fa-theater-masks icon-color"></i> Tiyatro
+        </button>
+        <button onclick="filterByCategory('Festival')" class="btn btn-outline-primary event-type-btn">
+            <i class="fas fa-campground icon-color"></i> Festival
+        </button>
+        <button onclick="filterByCategory('Stand Up')" class="btn btn-outline-primary event-type-btn">
+            <i class="fas fa-laugh icon-color"></i> Stand Up
+        </button>
+        <button onclick="filterByCategory('Spor-Doğa')" class="btn btn-outline-primary event-type-btn">
+            <i class="fas fa-hiking icon-color"></i> Spor-Doğa
+        </button>
+        <button onclick="filterByCategory('Gezi')" class="btn btn-outline-primary event-type-btn">
+            <i class="fas fa-map-marked-alt icon-color"></i> Gezi
+        </button>
+        <button onclick="filterByCategory('Söyleşi')" class="btn btn-outline-primary event-type-btn">
+            <i class="fas fa-comments icon-color"></i> Söyleşi
+        </button>
+    </div>
+
+
+
+
+
+    <!-- Etkinlik Kartları -->
+    <div id="eventContainer" class="row">
+        @foreach (var etkinlik in Model)
+        {
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4 event-card" data-name="@etkinlik.EtkinlikAdı" data-category="@etkinlik.Kategori" data-location="@etkinlik.Konum">
+                <div class="card shadow-lg border-0 h-100">
+                    <img src="@etkinlik.ImagePath" class="card-img-top" alt="@etkinlik.EtkinlikAdı" style="height: 200px; object-fit: cover; border-top-left-radius: 15px; border-top-right-radius: 15px;">
+                    <div class="card-body p-3">
+                        <h5 class="card-title">@etkinlik.EtkinlikAdı</h5>
+                        
+
+                        <p class="card-text text-muted">
+                            @(etkinlik.Açıklama != null && etkinlik.Açıklama.Length > 100
+                                ? etkinlik.Açıklama.Substring(0, 75) + "..."
+                                : etkinlik.Açıklama)
+                        </p>
+                        <div class="details">
+                            <span><i class="fas fa-map-marker-alt location-icon"></i> @etkinlik.Konum</span>
+                            <span><i class="fas fa-calendar-alt calendar-icon"></i> @etkinlik.Tarih.ToString("dd.MM.yyyy") - @etkinlik.Saat.ToString(@"hh\:mm")</span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <a asp-action="EtkinlikKatılım" asp-controller="UserDashboard" asp-route-id="@etkinlik.EtkinlikID" class="btn btn-outline-primary w-100">
+                            Detayları Gör
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+
+
+    <div id="allEventsMap" style="height: 500px; width: 100%; border-radius: 15px; margin-top: 50px;"></div>
+
+    <br />
+    <br />
+    <br />
+
+
+</div>
+
+<!-- Font Awesome ve Stil Bağlantıları -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="carousel.css">
+<script src="https://maps.googleapis.com/maps/api/js?key=&callback=initAllEventsMap" async defer></script>
+
+
+<script>
+    // Arama çubuğuna göre filtreleme
+    function filterEvents() {
+        const searchInput = document.getElementById("searchInput").value.toLowerCase();
+        const eventCards = document.querySelectorAll(".event-card");
+
+        eventCards.forEach(card => {
+            const eventName = card.getAttribute("data-name").toLowerCase();
+            const matchesSearch = eventName.includes(searchInput);
+
+            card.style.display = matchesSearch ? "block" : "none";
+        });
+    }
+
+    // Kategoriye göre filtreleme
+    function filterByCategory(category) {
+        const eventCards = document.querySelectorAll(".event-card");
+
+        eventCards.forEach(card => {
+            const eventCategory = card.getAttribute("data-category");
+            const matchesCategory = (category === "" || eventCategory === category);
+
+            card.style.display = matchesCategory ? "block" : "none";
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // İlk açılışta otomatik olarak seçili şehre göre filtreleme yap
+        filterEventsByCity();
+    });
+
+    function filterEventsByCity() {
+        const selectedCity = document.getElementById("ilSelect").value.toLowerCase();
+        const eventCards = document.querySelectorAll(".event-card");
+
+        eventCards.forEach(card => {
+            const eventLocation = card.getAttribute("data-location")?.toLowerCase();
+            const matchesCity = (eventLocation === selectedCity);
+
+            card.style.display = matchesCity ? "block" : "none";
+        });
+    }
+
+
+    // İl değiştiğinde filtrelemeyi tetikleme
+    document.getElementById("ilSelect").addEventListener("change", filterEventsByCity);
+
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const box = document.querySelector(".box");
+        let isDragging = false;
+        let startX;
+        let currentRotation = 0;
+
+        box.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            startX = e.pageX; // Mouse'un başlangıç konumu
+            box.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+
+            const deltaX = e.pageX - startX; // Hareket mesafesi
+            currentRotation += deltaX * 0.1; // Hassasiyet için çarpan
+            box.style.transform = `rotateY(${currentRotation}deg)`;
+            startX = e.pageX; // Güncel başlangıç pozisyonu
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+            box.style.cursor = "grab";
+        });
+    });
+
+
+
+
+    function initAllEventsMap() {
+        // Harita ayarları
+        const map = new google.maps.Map(document.getElementById("allEventsMap"), {
+            zoom: 10,
+            center: { lat: 41.0082, lng: 28.9784 }, // Varsayılan merkez: İstanbul
+        });
+
+        // Kullanıcı Konumu
+        const kullanıcıLatitude = parseFloat("@ViewBag.KullanıcıLatitude?.ToString().Replace(',', '.')");
+        const kullanıcıLongitude = parseFloat("@ViewBag.KullanıcıLongitude?.ToString().Replace(',', '.')");
+
+        // Kullanıcı işaretçisini ekle
+        if (!isNaN(kullanıcıLatitude) && !isNaN(kullanıcıLongitude)) {
+            const userMarker = new google.maps.Marker({
+                position: { lat: kullanıcıLatitude, lng: kullanıcıLongitude },
+                map: map,
+                title: "Sizin Konumunuz",
+                icon: {
+                    url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" // Mavi işaretçi
+                }
+            });
+
+            const userInfoWindow = new google.maps.InfoWindow({
+                content: `<div><h6>Sizin Konumunuz</h6></div>`
+            });
+
+            userMarker.addListener("mouseover", () => {
+                userInfoWindow.open(map, userMarker);
+            });
+
+            userMarker.addListener("mouseout", () => {
+                userInfoWindow.close();
+            });
+
+            // Haritayı kullanıcı konumuna odakla
+            map.setCenter({ lat: kullanıcıLatitude, lng: kullanıcıLongitude });
+        }
+
+        // Backend'den gelen etkinlik verileri
+        const events = @Html.Raw(ViewBag.EventsJson);
+
+        // Etkinlik işaretçilerini ekle
+        events.forEach(event => {
+            if (event.Latitude && event.Longitude) {
+                const marker = new google.maps.Marker({
+                    position: { lat: parseFloat(event.Latitude), lng: parseFloat(event.Longitude) },
+                    map: map,
+                    title: event.EtkinlikAdı,
+                });
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div>
+                            <h6>${event.EtkinlikAdı}</h6>
+                            <p><strong>Tarih:</strong> ${new Date(event.Tarih).toLocaleDateString()}</p>
+                            <p><strong>Saat:</strong> ${event.Saat}</p>
+                            <p><strong>Konum:</strong> ${event.Konum}</p>
+                        </div>
+                    `,
+                });
+
+                marker.addListener("click", () => {
+                    infoWindow.open(map, marker);
+                });
+            }
+        });
+    }
+
+
+
+
+
+
+</script>
+
+<style>
+
+     /* 3D Dönen Galeri */
+    .container {
+        perspective: 1000px;
+        cursor: grab;
+        margin-top: 0; /* Üst boşluk kaldırıldı */
+        padding-top: 10px; /* İhtiyaca göre padding eklendi */
+    }
+
+
+
+        .container:active {
+            cursor: grabbing; /* Basılı tutma sırasında */
+        }
+
+    .box {
+        margin-top: -20px; /* Üst boşluk azaltıldı */
+        position: relative;
+        width: 400px;
+        height: 400px;
+        margin: 0 auto;
+        transform-style: preserve-3d;
+        transition: transform 0.3s ease-out; /* Pürüzsüz kaydırma */
+    }
+
+        .box span {
+            position: absolute;
+            width: 150px; /* Resim genişliğine uygun */
+            height: 200px; /* Resim yüksekliğine uygun */
+            left: 50%;
+            top: 15%; /* Yukarı kaydırmak için yüzdelik azaltılabilir */
+            transform-origin: center;
+            transform: rotateY(calc(var(--i) * 60deg)) translateZ(350px); /* /* translateZ ile büyüklük ayarı */
+        }
+
+
+        .box img {
+            width: 180px; /* Genişlik artırıldı */
+            height: 250px; /* Yükseklik artırıldı */
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+    .box img:hover {
+        transform: scale(1.1);
+    }
+
+    .search-filter-container, .event-types {
+        position: relative;
+        z-index: 10;
+    }
+
+
+
+    /* Genel Container Ayarı */
+    .container {
+        padding: 0 15px;
+    }
+
+    /* Arama ve İl Filtresi */
+    .search-filter-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+
+    .search-bar {
+        border: 2px solid #DBA5F0;
+        border-radius: 30px;
+        padding: 10px 15px;
+        width: 600px;
+        height: 50px;
+        font-size: 0.9rem;
+    }
+
+    .il-filter {
+        border: 2px solid #DBA5F0;
+        border-radius: 30px;
+        height: 50px;
+        width: 120px;
+        padding-left: 10px;
+        font-size: 0.8rem;
+        text-align: center;
+    }
+
+    /* Etkinlik Türü Butonları */
+    .event-types {
+        gap: 10px;
+    }
+
+    .event-type-btn {
+        display: flex;
+        align-items: center;
+        padding: 8px 15px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        background-color: #ffffff;
+        border: 2px solid #DBA5F0;
+        color: #5a5ac9;
+    }
+
+        .event-type-btn i.icon-color {
+            color: #BFA4E9;
+            margin-right: 5px;
+        }
+
+    /* Kart Stili */
+    .card {
+        border-radius: 15px;
+        box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+        transition: transform 0.2s, box-shadow 0.2s;
+        font-size: 0.9rem;
+        overflow: hidden;
+    }
+
+        .card:hover {
+            transform: scale(1.03);
+            box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.2);
+        }
+
+    .card-title {
+        font-size: 1.1rem;
+        color: #5a5ac9;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-text {
+        font-size: 0.95rem;
+        color: #6c757d;
+    }
+
+    .details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .card-footer {
+        background-color: #fff;
+        border-top: 1px solid #eaeaea;
+        padding: 0.75rem;
+    }
+
+    .btn-outline-primary {
+        border-radius: 25px;
+        padding: 0.5rem 1.25rem;
+        font-weight: bold;
+        color: #5a5ac9;
+        border-color: #5a5ac9;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #5a5ac9;
+            color: #fff;
+            border-color: #5a5ac9;
+        }
+
+    .location-icon,
+    .calendar-icon {
+        color: #5a5ac9;
+        margin-right: 5px;
+    }
+
+
+    .il-filter {
+        border: 2px solid #DBA5F0;
+        border-radius: 30px;
+        height: 50px;
+        width: 120px;
+        padding-left: 10px;
+        font-size: 0.8rem;
+        text-align: center;
+        background-color: #fff;
+        color: #333;
+        -webkit-appearance: none; /* Safari/Chrome */
+        -moz-appearance: none; /* Firefox */
+        appearance: none; /* Diğer tarayıcılar */
+    }
+
+</style>

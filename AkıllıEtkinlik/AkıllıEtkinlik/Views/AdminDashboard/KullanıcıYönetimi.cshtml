@@ -1,0 +1,115 @@
+﻿@model List<AkıllıEtkinlik.Models.Kullanıcı>
+@{
+    Layout = "_Layout2";
+}
+
+@{
+    var user = (Kullanıcı)ViewData["User"];
+
+}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Kullanıcı Yönetimi</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+
+    <div class="row">
+        @foreach (var kullanıcı in Model)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
+                <div class="card shadow-sm" style="border-radius: 15px; overflow: hidden; border: 1px solid #ddd;">
+                    <img src="@kullanıcı.ProfilFotografi" class="card-img-top" alt="@kullanıcı.Ad @kullanıcı.Soyad's Profile Picture" style="height: 150px; object-fit: cover;">
+                    <div class="card-body text-center p-3">
+                        <h5 class="card-title mb-2" style="font-size: 1.2rem; font-weight: bold; color: #6a1b9a;">~@kullanıcı.KullanıcıAdı</h5>
+                        <p class="card-text" style="font-size: 0.9rem; color: #555;"><strong>Ad Soyad:</strong> @kullanıcı.Ad @kullanıcı.Soyad</p>
+                        <p class="card-text" style="font-size: 0.9rem; color: #555;"><strong>E-posta:</strong> @kullanıcı.Eposta</p>
+                        <p class="card-text" style="font-size: 0.9rem; color: #555;"><strong>Telefon:</strong> @kullanıcı.TelefonNumarasi</p>
+                        <div class="d-flex justify-content-between mt-3">
+                            <!-- Düzenle Butonu -->
+                            <button class="btn btn-sm" style="background-color: #6a1b9a; color: white; border-radius: 20px; padding: 5px 15px;" data-bs-toggle="modal" data-bs-target="#editModal-@kullanıcı.KullanıcıID">
+                                Güncelle
+                            </button>
+                            <!-- Sil Butonu -->
+                            <form asp-action="KullanıcıSil" asp-controller="AdminDashboard" method="post" style="display: inline;">
+                                <input type="hidden" name="id" value="@kullanıcı.KullanıcıID" />
+                                <button type="submit" class="btn btn-sm" style="background-color: #212121; color: white; border-radius: 20px; padding: 5px 15px;" onclick="return confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?');">
+                                    Sil
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Düzenleme Modalı -->
+            <div class="modal fade" id="editModal-@kullanıcı.KullanıcıID" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Kullanıcı Bilgilerini Güncelle</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form asp-action="KullanıcıGüncelle" asp-controller="AdminDashboard" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="KullanıcıID" value="@kullanıcı.KullanıcıID" />
+
+                                <div class="mb-3">
+                                    <label for="KullanıcıAdı" class="form-label">Kullanıcı Adı</label>
+                                    <input type="text" class="form-control" id="KullanıcıAdı" name="KullanıcıAdı" value="@kullanıcı.KullanıcıAdı" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="Ad" class="form-label">Ad</label>
+                                    <input type="text" class="form-control" id="Ad" name="Ad" value="@kullanıcı.Ad" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="Soyad" class="form-label">Soyad</label>
+                                    <input type="text" class="form-control" id="Soyad" name="Soyad" value="@kullanıcı.Soyad" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="Eposta" class="form-label">E-posta</label>
+                                    <input type="email" class="form-control" id="Eposta" name="Eposta" value="@kullanıcı.Eposta" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="TelefonNumarasi" class="form-label">Telefon Numarası</label>
+                                    <input type="text" class="form-control" id="TelefonNumarasi" name="TelefonNumarasi" value="@kullanıcı.TelefonNumarasi">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="Sifre" class="form-label">Şifre</label>
+                                    <input type="password" class="form-control" id="Sifre" name="Sifre" placeholder="Yeni şifre (isteğe bağlı)">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="IlgiAlanlari" class="form-label">İlgi Alanları</label>
+                                    <input type="text" class="form-control" id="IlgiAlanlari" name="IlgiAlanlari" value="@kullanıcı.IlgiAlanlari">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="Konum" class="form-label">Konum</label>
+                                    <input type="text" class="form-control" id="Konum" name="Konum" value="@kullanıcı.Konum">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="ProfilFotografi" class="form-label">Profil Fotoğrafı</label>
+                                    <input type="file" class="form-control" id="ProfilFotografi" name="ProfilFotografi" accept="image/*">
+                                </div>
+
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                                    <button type="submit" class="btn btn-primary">Güncelle</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        }

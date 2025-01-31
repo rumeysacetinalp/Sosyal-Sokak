@@ -1,0 +1,539 @@
+﻿@model AkıllıEtkinlik.Models.Etkinlik
+@{
+    Layout = "_Layout1";
+}
+
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <!-- Etkinlik Görseli -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 h-40">
+                <img src="@Model.ImagePath" class="card-img-top" alt="@Model.EtkinlikAdı" style="object-fit: cover; border-radius: 15px;">
+            </div>
+        </div>
+
+        <!-- Etkinlik Bilgileri -->
+        <div class="col-md-8">
+            <h2 class="text-primary font-weight-bold">@Model.EtkinlikAdı</h2>
+            <p class="text-muted"><i class="fas fa-theater-masks"></i> @Model.Kategori</p>
+
+            <div class="card shadow-sm p-3 mb-4">
+                <h5 class="text-dark font-weight-bold">Etkinlik Detayı</h5>
+                <p>@Model.Açıklama</p>
+            </div>
+
+            <div class="card shadow-lg p-3 mb-4">
+                <h5 class="text-dark font-weight-bold">Etkinliğe Geri Bildirim</h5>
+
+                <form method="post" action="/UserDashboard/GeriBildirimEkle">
+                    <input type="hidden" name="etkinlikID" value="@Model.EtkinlikID" />
+
+                    <!-- Yıldız Puanlama -->
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="puan" value="5" />
+                        <label for="star5" title="5 yıldız">☆</label>
+                        <input type="radio" id="star4" name="puan" value="4" />
+                        <label for="star4" title="4 yıldız">☆</label>
+                        <input type="radio" id="star3" name="puan" value="3" />
+                        <label for="star3" title="3 yıldız">☆</label>
+                        <input type="radio" id="star2" name="puan" value="2" />
+                        <label for="star2" title="2 yıldız">☆</label>
+                        <input type="radio" id="star1" name="puan" value="1" />
+                        <label for="star1" title="1 yıldız">☆</label>
+                    </div>
+
+                    <!-- Yorum -->
+                    <div class="form-group mt-3">
+                        <textarea name="yorum" class="form-control" placeholder="Etkinlik hakkındaki düşünceleriniz..."></textarea>
+                    </div>
+
+                    <!-- Kaydet Butonu -->
+                    <button type="submit" class="btn btn-outline-primary mt-3">Geri Bildirim Gönder</button>
+                </form>
+
+
+
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Tarih, Saat, Katıl Butonu ve Harita -->
+    <div class="row mt-4">
+        <!-- Tarih ve Saat Bilgileri -->
+        <div class="col-md-4">
+            <div class="card shadow-lg p-3 mb-4 text-center">
+                <h5><i class="fas fa-calendar-alt"></i> Tarih ve Saat</h5>
+                <p><strong>@Model.Tarih.ToString("dd MMM yyyy") / @Model.Saat.ToString(@"hh\:mm")</strong></p>
+                <p><i class="fas fa-map-marker-alt"></i> @Model.Konum</p>
+                <form asp-action="EtkinliğeKatıl" asp-controller="UserDashboard" method="post">
+                    <input type="hidden" name="EtkinlikID" value="@Model.EtkinlikID" />
+                    <button type="submit" class="btn btn-outline-primary w-100">Etkinliğe Katıl</button>
+                </form>
+
+
+            
+            </div>
+
+            <!-- Katılımcılar Bölümü -->
+            <div class="participants-container mt-4">
+                <button class="participants-button" onclick="loadParticipants()">
+                    <i class="fas fa-users"></i> Katılımcılar
+                </button>
+                <div id="participantsSection" style="display: none;">
+                    <ul id="participantsList" class="participants-list"></ul>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Harita -->
+        <div class="col-md-8">
+            <div id="map" style="height: 350px; width: 100%; border-radius: 15px;" class="shadow-lg"></div>
+            <div id="routeModes" class="mt-3 d-flex justify-content-center align-items-center">
+                <button onclick="changeTravelMode('DRIVING')" class="btn btn-outline-primary mx-2"><i class="fas fa-car"></i> Sürüş</button>
+                <button onclick="changeTravelMode('WALKING')" class="btn btn-outline-primary mx-2"><i class="fas fa-walking"></i> Yürüyüş</button>
+                <button onclick="changeTravelMode('TRANSIT')" class="btn btn-outline-primary mx-2"><i class="fas fa-bus"></i> Toplu Taşıma</button>
+
+            </div>
+            <div id="routeIcons" class="mt-3 d-flex justify-content-around align-items-center">
+                <div id="drivingInfo" class="route-info d-none text-center">
+                    <i class="fas fa-car"></i>
+                    <div>
+                        <span id="drivingDuration"></span> <br>
+                        <span id="drivingDistance"></span>
+                    </div>
+                </div>
+                <div id="walkingInfo" class="route-info d-none text-center">
+                    <i class="fas fa-walking"></i>
+                    <div>
+                        <span id="walkingDuration"></span> <br>
+                        <span id="walkingDistance"></span>
+                    </div>
+                </div>
+                <div id="transitInfo" class="route-info d-none text-center">
+                    <i class="fas fa-bus"></i>
+                    <div>
+                        <span id="transitDuration"></span> <br>
+                        <span id="transitDistance"></span>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="card shadow-lg mt-4" style="width: 100%; border-radius: 15px; overflow: hidden;">
+                <div class="card-header bg-primary text-white" style="background-color: #5a5ac9;">
+                    <h6 class="mb-0">Mesajlaşma Paneli</h6>
+                </div>
+                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                    @if (ViewBag.Mesajlar != null && ViewBag.Mesajlar.Count > 0)
+                    {
+                        foreach (var mesaj in ViewBag.Mesajlar)
+                        {
+                            <div class="d-flex mb-3">
+                                <img src="@Url.Content(mesaj.Gonderici?.ProfilFotografi ?? "/images/default-profile.png")"
+                                     alt="Profil Fotoğrafı" class="rounded-circle me-3"
+                                     style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #ddd;">
+                                <div>
+                                    <span class="text-primary fw-bold" style="color: #5a5ac9;">~@mesaj.Gonderici?.KullanıcıAdı</span>
+                                    <small class="text-muted">(@mesaj.GonderimZamani.ToString("dd.MM.yyyy HH:mm"))</small>
+                                    <p class="mb-0">@mesaj.MesajMetni</p>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">Henüz mesaj bulunmuyor.</p>
+                    }
+                </div>
+                <div class="card-footer">
+                    @if (ViewBag.EtkinligeKatildiMi == true)
+                    {
+                        <form method="post" action="/UserDashboard/MesajGonderKatılım">
+                            <input type="hidden" name="etkinlikID" value="@Model.EtkinlikID" />
+                            <div class="input-group">
+                                <textarea name="mesajMetni" class="form-control" placeholder="Mesaj yazın..." required></textarea>
+                                <button type="submit" class="btn btn-primary ms-2">Gönder</button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Mesaj göndermek için etkinliğe katılmanız gerekiyor.</p>
+                    }
+                </div>
+            </div>
+
+
+
+        </div>
+
+
+       
+
+    </div>
+
+
+
+
+
+
+
+    <br />
+    <br />
+    <br />
+
+</div>
+
+<!-- Harita JavaScript API'si -->
+<script src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap" async defer></script>
+<script>
+    let directionsRenderer;
+    let directionsService;
+    let map;
+    let etkinlikKonumu;
+    let kullanıcıKonumu;
+
+    function initMap() {
+        // Etkinlik Konumu
+        const etkinlikLatitude = parseFloat("@Model.Latitude.ToString().Replace(',', '.')");
+        const etkinlikLongitude = parseFloat("@Model.Longitude.ToString().Replace(',', '.')");
+
+        // Kullanıcı Konumu
+        const kullanıcıLatitude = parseFloat("@ViewBag.KullanıcıLatitude?.ToString().Replace(',', '.')");
+        const kullanıcıLongitude = parseFloat("@ViewBag.KullanıcıLongitude?.ToString().Replace(',', '.')");
+
+        // Eğer etkinlik ve kullanıcı konumları geçerliyse
+        if (!isNaN(etkinlikLatitude) && !isNaN(etkinlikLongitude) &&
+            !isNaN(kullanıcıLatitude) && !isNaN(kullanıcıLongitude)) {
+
+            // Kullanıcı ve Etkinlik Konumları
+            etkinlikKonumu = { lat: etkinlikLatitude, lng: etkinlikLongitude };
+            kullanıcıKonumu = { lat: kullanıcıLatitude, lng: kullanıcıLongitude };
+
+            // Harita Oluşturma
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 10,
+                center: kullanıcıKonumu,
+            });
+
+            // Marker'ları Ekle
+            const etkinlikMarker = new google.maps.Marker({
+                position: etkinlikKonumu,
+                map: map,
+                title: "@Model.EtkinlikAdı", // Marker başlığı
+            });
+
+            const kullanıcıMarker = new google.maps.Marker({
+                position: kullanıcıKonumu,
+                map: map,
+                title: "Siz Buradasınız", // Marker başlığı
+                icon: {
+                    url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" // Mavi işaretçi
+                }
+            });
+
+            // Bilgi Pencereleri (Info Windows)
+            const etkinlikInfo = new google.maps.InfoWindow({
+                content: `
+                    <div>
+                        <h6>@Model.EtkinlikAdı</h6>
+                        <p>@Model.Tarih.ToString("dd MMM yyyy") - @Model.Saat.ToString(@"hh\:mm")</p>
+                    </div>
+                `,
+            });
+
+            const kullanıcıInfo = new google.maps.InfoWindow({
+                content: `
+                    <div>
+                        <h6>Sizin Konumunuz</h6>
+                    </div>
+                `,
+            });
+
+            // Etkinlik Marker Üzerine Gelindiğinde Bilgi Penceresini Göster
+            etkinlikMarker.addListener("mouseover", () => {
+                etkinlikInfo.open(map, etkinlikMarker);
+            });
+
+            // Etkinlik Marker Üzerinden Ayrıldığında Bilgi Penceresini Kapat
+            etkinlikMarker.addListener("mouseout", () => {
+                etkinlikInfo.close();
+            });
+
+            // Kullanıcı Marker Üzerine Gelindiğinde Bilgi Penceresini Göster
+            kullanıcıMarker.addListener("mouseover", () => {
+                kullanıcıInfo.open(map, kullanıcıMarker);
+            });
+
+            // Kullanıcı Marker Üzerinden Ayrıldığında Bilgi Penceresini Kapat
+            kullanıcıMarker.addListener("mouseout", () => {
+                kullanıcıInfo.close();
+            });
+
+            // Rota Servisi ve Görüntüleme Ayarları
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true, // Varsayılan işaretçileri gizle
+            });
+            directionsRenderer.setMap(map);
+
+            // Başlangıç Modu Sürüş
+            changeTravelMode('DRIVING');
+        } else {
+            console.error("Geçersiz etkinlik veya kullanıcı konumu.");
+        }
+    }
+
+
+    function changeTravelMode(mode) {
+        const travelMode = google.maps.TravelMode[mode];
+        const request = {
+            origin: kullanıcıKonumu,
+            destination: etkinlikKonumu,
+            travelMode: travelMode
+        };
+
+        directionsService.route(request, (result, status) => {
+            if (status == google.maps.DirectionsStatus.OK) {
+                directionsRenderer.setDirections(result);
+                const route = result.routes[0].legs[0];
+
+                const duration = route.duration.text; // Süre bilgisi
+                const distance = route.distance.text; // Mesafe bilgisi
+
+                // Rota Bilgilerini Güncelle
+                document.getElementById("drivingInfo").classList.add("d-none");
+                document.getElementById("walkingInfo").classList.add("d-none");
+                document.getElementById("transitInfo").classList.add("d-none"); // Transit için bilgi gizlenir
+
+                if (mode === 'DRIVING') {
+                    document.getElementById("drivingInfo").classList.remove("d-none");
+                    document.getElementById("drivingDuration").innerText = duration;
+                    document.getElementById("drivingDistance").innerText = distance;
+                } else if (mode === 'WALKING') {
+                    document.getElementById("walkingInfo").classList.remove("d-none");
+                    document.getElementById("walkingDuration").innerText = duration;
+                    document.getElementById("walkingDistance").innerText = distance;
+                } else if (mode === 'TRANSIT') {
+                    // Toplu taşıma için yalnızca güzergâhı göster
+                    document.getElementById("transitInfo").classList.remove("d-none");
+                    document.getElementById("transitDuration").innerText = "Yalnızca güzergâh gösteriliyor.";
+                    document.getElementById("transitDistance").innerText = "KM bilgisi mevcut değil.";
+                }
+            } else {
+                console.error('Rota hesaplanamadı: ', status);
+            }
+        });
+    }
+
+
+
+    function loadParticipants() {
+        const etkinlikID = "@Model.EtkinlikID";
+
+        fetch(`/UserDashboard/GetEventParticipants?etkinlikID=${etkinlikID}`)
+            .then(response => response.json())
+            .then(data => {
+                const participantsList = document.getElementById("participantsList");
+                participantsList.innerHTML = ""; // Önceki veriyi temizler
+
+                data.forEach(participant => {
+                    const li = document.createElement("li");
+                    li.classList.add("list-group-item");
+
+                    // JSON yanıtındaki küçük harfli anahtarları kullanıyoruz
+                    const ad = participant.ad || "Ad Yok";
+                    const soyad = participant.soyad || "Soyad Yok";
+                    const role = participant.role || "Rol Yok";
+
+                    li.textContent = `${ad} ${soyad} - ${role}`;
+                    participantsList.appendChild(li);
+                });
+
+                document.getElementById("participantsSection").style.display = "block";
+            })
+            .catch(error => console.error("Katılımcıları yüklerken bir hata oluştu:", error));
+    }
+
+</script>
+
+<!-- Stil Ayarları -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+<style>
+    .card {
+        border-radius: 15px;
+    }
+
+    .text-primary {
+        color: #5a5ac9 !important;
+    }
+
+    .btn-outline-primary {
+        border-color: #5a5ac9;
+        color: #5a5ac9;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #5a5ac9;
+            color: #fff;
+        }
+
+    .btn-outline-danger {
+        border-color: #ff5e5e;
+        color: #ff5e5e;
+    }
+
+        .btn-outline-danger:hover {
+            background-color: #ff5e5e;
+            color: #fff;
+        }
+
+    .shadow-lg {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    #participantsSection {
+        max-height: 200px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+
+    .participants-container {
+        background-color: #f9f9ff;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: left;
+        width: fit-content;
+        max-width: 400px;
+        margin-left: 0; /* Sol tarafa yaslayın */
+        margin-right: auto; /* Sağda boşluk bırak */
+    }
+
+    .participants-button {
+        background-color: #5a5ac9;
+        color: #fff;
+        padding: 10px 20px;
+        font-size: 14px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+
+        .participants-button:hover {
+            background-color: #4a4aa9;
+        }
+
+        .participants-button i {
+            margin-right: 8px;
+        }
+
+    .participants-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+        .participants-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+            .participants-list li:nth-child(odd) {
+                background-color: #f3f3fb;
+            }
+
+            .participants-list li:last-child {
+                border-bottom: none;
+            }
+
+    .route-info {
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        width: 100px;
+    }
+
+        .route-info i {
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+
+
+
+
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+    }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 2rem;
+            color: #ddd;
+            cursor: pointer;
+        }
+
+        .star-rating input:checked ~ label {
+            color: #f39c12;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #f39c12;
+        }
+
+
+    .card-header {
+        background-color: #5a5ac9 !important;
+    }
+
+    /* Mesajlaşma Paneli Stili */
+    .text-primary {
+        color: #5a5ac9 !important;
+        font-weight: bold;
+    }
+
+    .input-group .form-control {
+        border-radius: 25px;
+        border: 1px solid #ddd;
+    }
+
+    .input-group button {
+        border-radius: 25px;
+        background-color: #5a5ac9;
+        color: white;
+    }
+
+        .input-group button:hover {
+            background-color: #4a4aa9;
+        }
+</style>

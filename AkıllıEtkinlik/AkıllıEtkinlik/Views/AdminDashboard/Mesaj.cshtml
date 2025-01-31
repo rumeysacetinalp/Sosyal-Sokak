@@ -1,0 +1,230 @@
+﻿@{
+    Layout = "_Layout2";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+
+
+<div class="container my-4">
+    <div class="row">
+        <!-- Sol Sidebar -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light-purple text-white">
+                    <h5 class="mb-0">Tüm Etkinlikler</h5>
+                </div>
+                <div class="card-body">
+
+
+                    <input type="text" id="eventSearch" class="form-control mb-3" placeholder="Etkinlik ara..." />
+                    <ul class="list-group" id="eventList">
+                        @if (ViewBag.Etkinlikler != null && ViewBag.Etkinlikler.Count > 0)
+                        {
+                            foreach (var etkinlik in ViewBag.Etkinlikler)
+                            {
+                                <li class="list-group-item">
+                                    <a href="@Url.Action("Mesaj", "AdminDashboard", new { etkinlikID = etkinlik.EtkinlikID })"
+                                       class="text-dark">
+                                        <strong>@etkinlik.EtkinlikAdı</strong> <br />
+                                        <small class="text-muted">@etkinlik.Tarih.ToShortDateString() - @etkinlik.Saat.ToString(@"hh\:mm")</small>
+                                    </a>
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="list-group-item">Henüz etkinlik bulunmuyor.</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Panel (Mesajlaşma) -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light-purple text-white">
+                    <h5 class="mb-0">Mesajlaşma Paneli</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    @if (ViewBag.SeciliEtkinlik != null)
+                    {
+                        <h6 class="text-purple mb-4">Seçilen Etkinlik: @ViewBag.SeciliEtkinlik.EtkinlikAdı</h6>
+                        @if (ViewBag.Mesajlar != null && ViewBag.Mesajlar.Count > 0)
+                        {
+                            foreach (var mesaj in ViewBag.Mesajlar)
+                            {
+                                <div class="message d-flex mb-3 align-items-start">
+                                    <img src="@Url.Content(mesaj.Gonderici?.ProfilFotografi ?? "/images/default-profile.png")"
+                                         alt="Profil Fotoğrafı" class="profile-img me-3">
+                                    <div class="message-content">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="sender text-purple fw-bold">~ @mesaj.Gonderici?.KullanıcıAdı</span>
+                                            <small class="time text-muted">@mesaj.GonderimZamani?.ToString("dd.MM.yyyy HH:mm")</small>
+                                        </div>
+                                        <p class="text mt-2 mb-0">@mesaj.MesajMetni</p>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">Bu etkinlik için henüz mesaj bulunmuyor.</p>
+                        }
+
+                        <!-- Mesaj Gönderme -->
+                        <form method="post" action="@Url.Action("AdminMesajGonder", "AdminDashboard")">
+                            <input type="hidden" name="etkinlikID" value="@ViewBag.SeciliEtkinlik.EtkinlikID" />
+                            <div class="input-group">
+                                <textarea name="mesajMetni" class="form-control" placeholder="Mesajınızı yazın..." required></textarea>
+                                <button type="submit" class="btn btn-purple ms-2">Gönder</button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <p>Lütfen bir etkinlik seçiniz.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .bg-light-purple {
+        background-color: #d6c3e9; /* Slightly darker purple */
+        border-radius: 10px;
+    }
+
+    .text-purple {
+        color: #5e2d91; /* Richer purple for better visibility */
+        font-weight: bold;
+    }
+
+    .btn-purple {
+        background-color: #8b5fbf;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+        .btn-purple:hover {
+            background-color: #7a4fb0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+    .list-group-item {
+        display: block;
+    }
+
+
+        .list-group-item a {
+            text-decoration: none; /* Remove underline */
+            color: #5e2d91; /* Dark purple */
+            font-weight: 500;
+        }
+
+        .list-group-item:hover {
+            background-color: #e3d7f7;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+    textarea {
+        border-radius: 15px;
+        border: 1px solid #d1bce3;
+        resize: none;
+    }
+
+        textarea:focus {
+            border-color: #8b5fbf;
+            box-shadow: 0 0 5px rgba(139, 95, 191, 0.5);
+        }
+
+    .text-selected-event {
+        color: #5e2d91; /* Dark purple for better visibility */
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+
+    .message {
+        border-radius: 15px;
+        background-color: #f8f0fc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+    }
+
+        .message:hover {
+            background-color: #ede3f8;
+        }
+
+
+
+    /* Input field */
+    .form-control {
+        border-radius: 25px;
+        border: 1px solid #d1bce3;
+        padding: 10px;
+        box-shadow: none;
+    }
+
+        .form-control:focus {
+            border-color: #8b5fbf;
+            box-shadow: 0 0 5px rgba(139, 95, 191, 0.5);
+        }
+
+    .message .time {
+        font-size: 0.8rem;
+        color: gray;
+        margin-left: 15px;
+        flex-shrink: 0
+    }
+
+    .profile-img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #b69acb;
+        margin-right: 15px;
+    }
+</style>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.querySelector("#eventSearch");
+        const eventItems = document.querySelectorAll(".list-group-item");
+
+        searchInput.addEventListener("input", function () {
+            const searchTerm = searchInput.value.toLowerCase();
+            eventItems.forEach(item => {
+                const eventText = item.textContent.toLowerCase();
+                if (eventText.includes(searchTerm)) {
+                    item.style.display = "block";
+                } else {
+                    item.style.display = "none";
+                }
+            });
+        });
+    });
+
+
+
+</script>
